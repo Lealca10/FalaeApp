@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class UsuarioDomain
+    public class UsuarioDomain
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Nome { get; set; } = string.Empty;

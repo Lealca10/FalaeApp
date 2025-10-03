@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class PreferenciasUsuarioDomain
+    public class PreferenciasUsuarioDomain
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string UsuarioId { get; set; } = string.Empty;

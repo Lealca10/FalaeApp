@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class EncontroDomain
+    public class EncontroDomain
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string LocalId { get; set; } = string.Empty;
