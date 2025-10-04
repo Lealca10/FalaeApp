@@ -10,10 +10,21 @@ namespace Domain.Entities
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string UsuarioId { get; set; } = string.Empty;
-        public List<string> Interesses { get; set; } = new();
-        public string FaixaEtariaPreferida { get; set; } = string.Empty;
-        public string LocalizacaoPreferida { get; set; } = string.Empty;
-        public List<string> Hobbies { get; set; } = new();
+        public string HorarioFavorito { get; set; } = string.Empty; // Manhã, Tarde, Noite, Madrugada
+        public string TipoComidaFavorito { get; set; } = string.Empty; // Italiana, Mexicana, etc.
+        public int NivelEstresse { get; set; } // 1-10
+        public bool GostaViajar { get; set; }
+        public string PreferenciaLocal { get; set; } = string.Empty; // Cidade, Campo
+        public string PreferenciaAmbiente { get; set; } = string.Empty; // Praia, Montanha
+        public int ImportanciaEspiritualidade { get; set; } // 1-10
+        public string PosicaoPolitica { get; set; } = string.Empty; // Direita, Centro-Direita, etc.
+        public string Genero { get; set; } = string.Empty; // Mulher, Homem, Não-Binário
+        public string PreferenciaMusical { get; set; } = string.Empty; // Rock, Pop, etc.
+        public string MoodFilmesSeries { get; set; } = string.Empty; // Maratonador, Gosta de Estreias, etc.
+        public string StatusRelacionamento { get; set; } = string.Empty; // Casado(a), Solteiro(a), etc.
+        public bool TemFilhos { get; set; }
+        public string PreferenciaAnimal { get; set; } = string.Empty; // Cão, Gato
+        public string FraseDefinicao { get; set; } = string.Empty; // Mantra ou frase que define
 
         // Gostos pessoais como JSON ou propriedades separadas
         public string GostosPessoaisJson { get; set; } = string.Empty;
