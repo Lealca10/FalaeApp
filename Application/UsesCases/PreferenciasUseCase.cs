@@ -1,5 +1,7 @@
 ﻿using Application.Request;
 using Application.Response;
+using Domain.Entities;
+using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
