@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -19,7 +18,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Encontro> GetByIdAsync(string id)
+        public async Task<EncontroDomain> GetByIdAsync(string id)
         {
             return await _context.Encontros
                 .Include(e => e.Local)

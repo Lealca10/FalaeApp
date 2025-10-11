@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Application.Interfaces;
 
-namespace Application.UsesCases
+namespace Application.UseCases
 {
     public interface IUsuarioUseCase
     {
@@ -24,7 +24,10 @@ namespace Application.UsesCases
         private readonly IJwtService _jwtService;
         private readonly IPasswordService _passwordService;
 
-        public UsuarioUseCase(IUsuarioRepository usuarioRepository, IJwtService jwtService, IPasswordService passwordService)
+        public UsuarioUseCase(
+            IUsuarioRepository usuarioRepository,
+            IJwtService jwtService,
+            IPasswordService passwordService)
         {
             _usuarioRepository = usuarioRepository;
             _jwtService = jwtService;
@@ -54,7 +57,7 @@ namespace Application.UsesCases
             {
                 Id = usuario.Id,
                 Nome = usuario.Nome,
-                Idade = DateTime.Now.Year - usuario.DataNascimento.Year,
+                Idade = CalcularIdade(usuario.DataNascimento),
                 Cidade = usuario.Cidade
             };
         }
@@ -74,7 +77,7 @@ namespace Application.UsesCases
                 {
                     Id = usuario.Id,
                     Nome = usuario.Nome,
-                    Idade = DateTime.Now.Year - usuario.DataNascimento.Year,
+                    Idade = CalcularIdade(usuario.DataNascimento),
                     Cidade = usuario.Cidade
                 }
             };
@@ -89,6 +92,14 @@ namespace Application.UsesCases
                 return true;
             }
             return false;
+        }
+
+        private int CalcularIdade(DateTime dataNascimento)
+        {
+            var hoje = DateTime.Today;
+            var idade = hoje.Year - dataNascimento.Year;
+            if (dataNascimento.Date > hoje.AddYears(-idade)) idade--;
+            return idade;
         }
     }
 }

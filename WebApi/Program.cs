@@ -1,70 +1,78 @@
-
-using Application.Interfaces;
-using Application.UsesCases;
-using Domain.Interfaces;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Infrastructure.BaseDados;
-using Infrastructure.Repositories;
-using WebApi.Validation;
+// WebApi/Program.cs
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Infrastructure.Data;
+using Application.Interfaces;
+using Infrastructure.Services;
+using Application.UseCases;
+using Domain.Interfaces;
+using Infrastructure.Repositories;
+using Application.UsesCases;
 
-namespace WebApi
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Database
+builder.Services.AddDbContext<DatabaseContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// JWT Configuration
+var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
+
+builder.Services.AddAuthentication(x =>
 {
-    public class Program
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
 
-            // Add services to the container.
-            builder.Services.AddSingleton<IDBContext, DataBaseContext>();
-            builder.Services.AddScoped<IAdicionarFaturaUseCase, AdicionarFaturaUseCases>();
-            builder.Services.AddScoped<IConsultarFaturaEntidade, ConsultarFaturaRepositorio>();
-            builder.Services.AddScoped<ObterFaturasUseCase>();
+// Dependency Injection
+// Repositories
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IPreferenciasRepository, PreferenciasRepository>();
+builder.Services.AddScoped<ILocalEncontroRepository, LocalEncontroRepository>();
+builder.Services.AddScoped<IEncontroRepository, EncontroRepository>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 
-            builder.Services.AddScoped<IAdicionarFaturaEntidade, AdicionarFaturaRepositorio>();
+// Use Cases
+builder.Services.AddScoped<IUsuarioUseCase, UsuarioUseCase>();
+builder.Services.AddScoped<IPreferenciasUseCase, PreferenciasUseCase>();
 
-            builder.Services.AddTransient < IValidator, ValidarRequisicaoFatura>();
-            builder.Services.AddControllers().AddFluentValidation(fv => { fv.RegisterValidatorsFromAssemblyContaining<ValidarRequisicaoFatura>(); });
+// Services
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+var app = builder.Build();
 
-
-            // Database
-            builder.Services.AddDbContext<DatabaseContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            // Dependency Injection
-            builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-            builder.Services.AddScoped<IPreferenciasRepository, PreferenciasRepository>();
-            builder.Services.AddScoped<ILocalEncontroRepository, LocalEncontroRepository>();
-            builder.Services.AddScoped<IEncontroRepository, EncontroRepository>();
-            builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
-
-            builder.Services.AddScoped<IUsuarioUseCase, UsuarioUseCase>();
-            builder.Services.AddScoped<IPreferenciasUseCase, PreferenciasUseCase>();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
-        }
-    }
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
