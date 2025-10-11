@@ -2,6 +2,7 @@
 using Domain.Interfaces;
 using Infrastructure.BaseDados;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
