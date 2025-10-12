@@ -10,6 +10,7 @@ using Application.UseCases;
 using Domain.Interfaces;
 using Infrastructure.Repositories;
 using Application.UsesCases;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +19,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
+// Database - CORRIGIDO para MySQL
 builder.Services.AddDbContext<DatabaseContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("falae"),
+        new MySqlServerVersion(new Version(8, 0, 21))
+    ));
 
 // JWT Configuration
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
+var key = Encoding.ASCII.GetBytes("#J4wBK^h4HLqH$%zXA3Y2YWiqw8j3DUc"); // Mova para appsettings depois
 
 builder.Services.AddAuthentication(x =>
 {
@@ -74,5 +78,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// CRIAR BANCO E TABELAS AUTOMATICAMENTE
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    try
+    {
+        dbContext.Database.EnsureCreated();
+        Console.WriteLine("Banco de dados e tabelas criados com sucesso!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao criar banco: {ex.Message}");
+    }
+}
 
 app.Run();

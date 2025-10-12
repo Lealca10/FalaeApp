@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Application.Request;
-using Application.UsesCases;
+using Application.UseCases;
 
 namespace WebApi.Controllers
 {
