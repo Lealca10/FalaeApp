@@ -85,8 +85,27 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     try
     {
-        dbContext.Database.EnsureCreated();
-        Console.WriteLine("Banco de dados e tabelas criados com sucesso!");
+        // Cria o banco se não existir
+        await dbContext.Database.EnsureCreatedAsync();
+
+        // Verifica se todas as tabelas foram criadas
+        var created = await dbContext.Database.CanConnectAsync();
+
+        if (created)
+        {
+            // Lista as tabelas esperadas vs criadas
+            var expectedTables = new List<string>
+            {
+                "Usuarios",
+                "PreferenciasUsuarios",
+                "LocaisEncontro",
+                "Encontros",
+                "FeedbacksEncontro"
+            };
+
+            Console.WriteLine("Tabelas esperadas: " + string.Join(", ", expectedTables));
+            Console.WriteLine("Banco de dados criado com sucesso!");
+        }
     }
     catch (Exception ex)
     {

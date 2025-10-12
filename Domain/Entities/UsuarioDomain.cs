@@ -15,7 +15,6 @@ namespace Domain.Entities
         public string Cidade { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
-        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
         public bool Ativo { get; set; } = true;
 
         // Navigation properties

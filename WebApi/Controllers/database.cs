@@ -1,29 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Infrastructure.Data;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestController : ControllerBase
+public class DatabaseController : ControllerBase
 {
     private readonly DatabaseContext _context;
 
-    public TestController(DatabaseContext context)
+    public DatabaseController(DatabaseContext context)
     {
         _context = context;
     }
 
-    [HttpGet("database")]
-    public async Task<IActionResult> TestDatabase()
+    [HttpGet("tables")]
+    public IActionResult GetTables()
     {
         try
         {
-            var canConnect = await _context.Database.CanConnectAsync();
-            return Ok(new
+            var entityTypes = _context.Model.GetEntityTypes();
+            var tables = entityTypes.Select(e => new
             {
-                message = "Conexão com banco estabelecida com sucesso!",
-                connected = canConnect
-            });
+                Entity = e.Name,
+                TableName = e.GetTableName(),
+                Properties = e.GetProperties().Select(p => p.Name).ToList()
+            }).ToList();
+
+            return Ok(tables);
         }
         catch (Exception ex)
         {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
-using System.Reflection;
 
 namespace Infrastructure.Data
 {
@@ -18,10 +17,7 @@ namespace Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Aplica todas as configurações automaticamente
-            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-            // Configuração básica para Usuario
+            // Configuração para UsuarioDomain
             modelBuilder.Entity<UsuarioDomain>(entity =>
             {
                 entity.HasKey(u => u.Id);
@@ -29,72 +25,53 @@ namespace Infrastructure.Data
                 entity.Property(u => u.Email).IsRequired().HasMaxLength(150);
                 entity.HasIndex(u => u.Email).IsUnique();
                 entity.Property(u => u.Senha).IsRequired().HasMaxLength(255);
-                entity.Property(u => u.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                // Adicione outras propriedades que existem na sua classe UsuarioDomain
             });
 
-            // Configuração básica para PreferenciasUsuario
+            // Configuração para PreferenciasUsuarioDomain
             modelBuilder.Entity<PreferenciasUsuarioDomain>(entity =>
             {
                 entity.HasKey(p => p.Id);
-                // Se tiver relação com Usuario, descomente:
+
+                // Se tiver relação com usuário, descomente:
                 // entity.HasOne(p => p.Usuario)
-                //       .WithMany()
-                //       .HasForeignKey(p => p.UsuarioId)
-                //       .OnDelete(DeleteBehavior.Cascade);
+                //       .WithOne()
+                //       .HasForeignKey<PreferenciasUsuarioDomain>(p => p.UsuarioId);
             });
 
-            // Configuração básica para LocalEncontro
+            // Configuração para LocalEncontroDomain
             modelBuilder.Entity<LocalEncontroDomain>(entity =>
             {
                 entity.HasKey(l => l.Id);
                 entity.Property(l => l.Nome).IsRequired().HasMaxLength(100);
                 entity.Property(l => l.Endereco).IsRequired().HasMaxLength(200);
+                entity.Property(l => l.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
 
-            // Configuração básica para Encontro - APENAS CAMPOS QUE EXISTEM
+            // Configuração para EncontroDomain
             modelBuilder.Entity<EncontroDomain>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                // APENAS se sua entidade EncontroDomain tiver esses campos:
-                // entity.HasOne(e => e.Local)
-                //       .WithMany()
-                //       .HasForeignKey(e => e.LocalId)
-                //       .OnDelete(DeleteBehavior.Restrict);
+                // Configure APENAS as propriedades que existem na sua classe EncontroDomain
+                // Exemplo:
+                // entity.Property(e => e.DataEncontro).IsRequired();
+                // entity.Property(e => e.Status).HasMaxLength(50);
             });
 
-            // Configuração básica para FeedbackEncontro - APENAS CAMPOS QUE EXISTEM
+            // Configuração para FeedbackEncontroDomain
             modelBuilder.Entity<FeedbackEncontroDomain>(entity =>
             {
                 entity.HasKey(f => f.Id);
+                entity.Property(f => f.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                // APENAS se sua entidade FeedbackEncontroDomain tiver esses campos:
-                // entity.HasOne(f => f.Encontro)
-                //       .WithMany()
-                //       .HasForeignKey(f => f.EncontroId)
-                //       .OnDelete(DeleteBehavior.Cascade);
+                // Configure APENAS as propriedades que existem na sua classe FeedbackEncontroDomain
+                // Exemplo:
+                // entity.Property(f => f.Comentario).HasMaxLength(500);
+                // entity.Property(f => f.Nota).IsRequired();
             });
-        }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            // Atualiza datas automaticamente para entidades que herdam de BaseEntity
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is BaseEntity && (
-                    e.State == EntityState.Added || e.State == EntityState.Modified));
-
-            foreach (var entityEntry in entries)
-            {
-                var entity = (BaseEntity)entityEntry.Entity;
-
-                if (entityEntry.State == EntityState.Added)
-                {
-                    entity.DataCriacao = DateTime.UtcNow;
-                }
-                entity.DataAtualizacao = DateTime.UtcNow;
-            }
-
-            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 }
