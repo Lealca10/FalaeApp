@@ -17,7 +17,7 @@ namespace Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuração para UsuarioDomain
+            // UsuarioDomain
             modelBuilder.Entity<UsuarioDomain>(entity =>
             {
                 entity.HasKey(u => u.Id);
@@ -25,60 +25,49 @@ namespace Infrastructure.Data
                 entity.HasIndex(u => u.Email).IsUnique();
                 entity.HasIndex(u => u.Cpf).IsUnique();
 
-                // Relacionamento 1:1 com Preferencias
+                // 1:1 com Preferencias
                 entity.HasOne(u => u.Preferencias)
                       .WithOne(p => p.Usuario)
                       .HasForeignKey<PreferenciasUsuarioDomain>(p => p.UsuarioId);
+
+                // M:N com Encontros
+                entity.HasMany(u => u.Encontros)
+                      .WithMany(e => e.Participantes)
+                      .UsingEntity<Dictionary<string, object>>(
+                          "UsuarioEncontro",
+                          j => j.HasOne<EncontroDomain>().WithMany().HasForeignKey("EncontroId"),
+                          j => j.HasOne<UsuarioDomain>().WithMany().HasForeignKey("UsuarioId")
+                      );
             });
 
-            // Configuração para PreferenciasUsuarioDomain
+            // PreferenciasUsuarioDomain
             modelBuilder.Entity<PreferenciasUsuarioDomain>(entity =>
             {
                 entity.HasKey(p => p.Id);
                 entity.Property(p => p.Id).HasMaxLength(36);
                 entity.Property(p => p.UsuarioId).HasMaxLength(36);
-
-                // Restrições para campos numéricos
-                entity.Property(p => p.NivelEstresse)
-                      .HasAnnotation("Range", new[] { 1, 10 });
-
-                entity.Property(p => p.ImportanciaEspiritualidade)
-                      .HasAnnotation("Range", new[] { 1, 10 });
             });
 
-            // Configuração para LocalEncontroDomain
+            // LocalEncontroDomain
             modelBuilder.Entity<LocalEncontroDomain>(entity =>
             {
                 entity.HasKey(l => l.Id);
                 entity.Property(l => l.Id).HasMaxLength(36);
             });
 
-            // Configuração para EncontroDomain
+            // EncontroDomain
             modelBuilder.Entity<EncontroDomain>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasMaxLength(36);
                 entity.Property(e => e.LocalId).HasMaxLength(36);
 
-                // Relacionamento com Local
                 entity.HasOne(e => e.Local)
                       .WithMany(l => l.Encontros)
                       .HasForeignKey(e => e.LocalId);
-
-                // Relacionamento muitos-para-muitos com Usuarios
-                entity.HasMany(e => e.Participantes)
-                      .WithMany(u => u.Encontros)
-                      .UsingEntity<Dictionary<string, object>>(
-                          "UsuarioEncontro",
-                          j => j.HasOne<UsuarioDomain>().WithMany().HasForeignKey("UsuarioId"),
-                          j => j.HasOne<EncontroDomain>().WithMany().HasForeignKey("EncontroId"),
-                          j =>
-                          {
-                              j.HasKey("UsuarioId", "EncontroId");
-                          });
             });
 
-            // Configuração para FeedbackEncontroDomain
+            // FeedbackEncontroDomain
             modelBuilder.Entity<FeedbackEncontroDomain>(entity =>
             {
                 entity.HasKey(f => f.Id);
@@ -86,7 +75,6 @@ namespace Infrastructure.Data
                 entity.Property(f => f.EncontroId).HasMaxLength(36);
                 entity.Property(f => f.UsuarioId).HasMaxLength(36);
 
-                // Relacionamentos
                 entity.HasOne(f => f.Encontro)
                       .WithMany(e => e.Feedbacks)
                       .HasForeignKey(f => f.EncontroId);

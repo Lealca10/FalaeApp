@@ -19,11 +19,26 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Falae API",
+        Version = "v1",
+        Description = "API para sistema de encontros Falae"
+    });
+});
+
 // Database - CORRIGIDO para MySQL
 builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("falae"),
-        new MySqlServerVersion(new Version(8, 0, 21))
+        new MySqlServerVersion(new Version(8, 0, 21)),
+        mysqlOptions =>
+        {
+            mysqlOptions.EnableStringComparisonTranslations();
+            // Configurar para usar GUIDs como char
+        }
     ));
 
 // JWT Configuration
