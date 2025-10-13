@@ -21,56 +21,79 @@ namespace Infrastructure.Data
             modelBuilder.Entity<UsuarioDomain>(entity =>
             {
                 entity.HasKey(u => u.Id);
-                entity.Property(u => u.Nome).IsRequired().HasMaxLength(100);
-                entity.Property(u => u.Email).IsRequired().HasMaxLength(150);
+                entity.Property(u => u.Id).HasMaxLength(36);
                 entity.HasIndex(u => u.Email).IsUnique();
-                entity.Property(u => u.Senha).IsRequired().HasMaxLength(255);
+                entity.HasIndex(u => u.Cpf).IsUnique();
 
-                // Adicione outras propriedades que existem na sua classe UsuarioDomain
+                // Relacionamento 1:1 com Preferencias
+                entity.HasOne(u => u.Preferencias)
+                      .WithOne(p => p.Usuario)
+                      .HasForeignKey<PreferenciasUsuarioDomain>(p => p.UsuarioId);
             });
 
             // Configuração para PreferenciasUsuarioDomain
             modelBuilder.Entity<PreferenciasUsuarioDomain>(entity =>
             {
                 entity.HasKey(p => p.Id);
+                entity.Property(p => p.Id).HasMaxLength(36);
+                entity.Property(p => p.UsuarioId).HasMaxLength(36);
 
-                // Se tiver relação com usuário, descomente:
-                // entity.HasOne(p => p.Usuario)
-                //       .WithOne()
-                //       .HasForeignKey<PreferenciasUsuarioDomain>(p => p.UsuarioId);
+                // Restrições para campos numéricos
+                entity.Property(p => p.NivelEstresse)
+                      .HasAnnotation("Range", new[] { 1, 10 });
+
+                entity.Property(p => p.ImportanciaEspiritualidade)
+                      .HasAnnotation("Range", new[] { 1, 10 });
             });
 
             // Configuração para LocalEncontroDomain
             modelBuilder.Entity<LocalEncontroDomain>(entity =>
             {
                 entity.HasKey(l => l.Id);
-                entity.Property(l => l.Nome).IsRequired().HasMaxLength(100);
-                entity.Property(l => l.Endereco).IsRequired().HasMaxLength(200);
-                entity.Property(l => l.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(l => l.Id).HasMaxLength(36);
             });
 
             // Configuração para EncontroDomain
             modelBuilder.Entity<EncontroDomain>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.Id).HasMaxLength(36);
+                entity.Property(e => e.LocalId).HasMaxLength(36);
 
-                // Configure APENAS as propriedades que existem na sua classe EncontroDomain
-                // Exemplo:
-                // entity.Property(e => e.DataEncontro).IsRequired();
-                // entity.Property(e => e.Status).HasMaxLength(50);
+                // Relacionamento com Local
+                entity.HasOne(e => e.Local)
+                      .WithMany(l => l.Encontros)
+                      .HasForeignKey(e => e.LocalId);
+
+                // Relacionamento muitos-para-muitos com Usuarios
+                entity.HasMany(e => e.Participantes)
+                      .WithMany(u => u.Encontros)
+                      .UsingEntity<Dictionary<string, object>>(
+                          "UsuarioEncontro",
+                          j => j.HasOne<UsuarioDomain>().WithMany().HasForeignKey("UsuarioId"),
+                          j => j.HasOne<EncontroDomain>().WithMany().HasForeignKey("EncontroId"),
+                          j =>
+                          {
+                              j.HasKey("UsuarioId", "EncontroId");
+                          });
             });
 
             // Configuração para FeedbackEncontroDomain
             modelBuilder.Entity<FeedbackEncontroDomain>(entity =>
             {
                 entity.HasKey(f => f.Id);
-                entity.Property(f => f.DataCriacao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(f => f.Id).HasMaxLength(36);
+                entity.Property(f => f.EncontroId).HasMaxLength(36);
+                entity.Property(f => f.UsuarioId).HasMaxLength(36);
 
-                // Configure APENAS as propriedades que existem na sua classe FeedbackEncontroDomain
-                // Exemplo:
-                // entity.Property(f => f.Comentario).HasMaxLength(500);
-                // entity.Property(f => f.Nota).IsRequired();
+                // Relacionamentos
+                entity.HasOne(f => f.Encontro)
+                      .WithMany(e => e.Feedbacks)
+                      .HasForeignKey(f => f.EncontroId);
+
+                entity.HasOne(f => f.Usuario)
+                      .WithMany(u => u.Feedbacks)
+                      .HasForeignKey(f => f.UsuarioId);
             });
         }
     }
