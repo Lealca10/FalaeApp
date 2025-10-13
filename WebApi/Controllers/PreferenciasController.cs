@@ -26,11 +26,60 @@ public class PreferenciasController : ControllerBase
                 p.HorarioFavorito,
                 p.TipoComidaFavorito,
                 p.NivelEstresse,
+                p.GostaViajar,
+                p.PreferenciaLocal,
+                p.PreferenciaAmbiente,
+                p.ImportanciaEspiritualidade,
+                p.PosicaoPolitica,
+                p.Genero,
+                p.PreferenciaMusical,
+                p.MoodFilmesSeries,
+                p.StatusRelacionamento,
+                p.TemFilhos,
+                p.PreferenciaAnimal,
+                p.FraseDefinicao,
+                p.GostosPessoaisJson,
                 p.DataAtualizacao
             })
             .ToListAsync();
 
         return Ok(preferencias);
+    }
+
+    // GET: api/Preferencias/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<object>> GetPreferencia(string id)
+    {
+        var preferencia = await _context.PreferenciasUsuarios
+            .Where(p => p.Id == id)
+            .Select(p => new
+            {
+                p.Id,
+                p.UsuarioId,
+                p.HorarioFavorito,
+                p.TipoComidaFavorito,
+                p.NivelEstresse,
+                p.GostaViajar,
+                p.PreferenciaLocal,
+                p.PreferenciaAmbiente,
+                p.ImportanciaEspiritualidade,
+                p.PosicaoPolitica,
+                p.Genero,
+                p.PreferenciaMusical,
+                p.MoodFilmesSeries,
+                p.StatusRelacionamento,
+                p.TemFilhos,
+                p.PreferenciaAnimal,
+                p.FraseDefinicao,
+                p.GostosPessoaisJson,
+                p.DataAtualizacao
+            })
+            .FirstOrDefaultAsync();
+
+        if (preferencia == null)
+            return NotFound(new { message = "Preferências não encontradas" });
+
+        return Ok(preferencia);
     }
 
     // GET: api/Preferencias/usuario/{usuarioId}
@@ -110,7 +159,7 @@ public class PreferenciasController : ControllerBase
             _context.PreferenciasUsuarios.Add(preferencias);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPreferenciasByUsuario), new { usuarioId = input.UsuarioId }, new
+            return CreatedAtAction(nameof(GetPreferencia), new { id = preferencias.Id }, new
             {
                 preferencias.Id,
                 preferencias.UsuarioId,
@@ -151,6 +200,50 @@ public class PreferenciasController : ControllerBase
             preferencias.GostosPessoaisJson = input.GostosPessoaisJson;
             preferencias.DataAtualizacao = DateTime.UtcNow;
 
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    // DELETE: api/Preferencias/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletePreferencias(string id)
+    {
+        try
+        {
+            var preferencias = await _context.PreferenciasUsuarios.FindAsync(id);
+            if (preferencias == null)
+                return NotFound(new { message = "Preferências não encontradas" });
+
+            _context.PreferenciasUsuarios.Remove(preferencias);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    // DELETE: api/Preferencias/usuario/{usuarioId} - Delete por usuário
+    [HttpDelete("usuario/{usuarioId}")]
+    public async Task<IActionResult> DeletePreferenciasByUsuario(string usuarioId)
+    {
+        try
+        {
+            var preferencias = await _context.PreferenciasUsuarios
+                .FirstOrDefaultAsync(p => p.UsuarioId == usuarioId);
+
+            if (preferencias == null)
+                return NotFound(new { message = "Preferências não encontradas para este usuário" });
+
+            _context.PreferenciasUsuarios.Remove(preferencias);
             await _context.SaveChangesAsync();
 
             return NoContent();
