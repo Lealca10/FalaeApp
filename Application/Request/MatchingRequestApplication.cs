@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.Request
 {
-    public class MatchingRequest
+    public class MatchingRequestApplication
     {
         public string LocalId { get; set; } = string.Empty;
         public DateTime DataHora { get; set; }
