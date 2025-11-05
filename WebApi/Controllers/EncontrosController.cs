@@ -228,5 +228,209 @@ public class EncontrosController : ControllerBase
         }
     }
 
-    // ... (mantenha os outros métodos com a mesma lógica de correção)
+
+    // PUT: api/Encontros/{id}/status
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> AtualizarStatus(string id, [FromBody] AtualizarStatusRequest request)
+    {
+        try
+        {
+            var encontro = await _context.Encontros.FindAsync(id);
+            if (encontro == null)
+                return NotFound(new { message = "Encontro não encontrado" });
+
+            if (!new[] { "agendado", "realizado", "cancelado" }.Contains(request.Status.ToLower()))
+                return BadRequest(new { message = "Status inválido. Use: agendado, realizado ou cancelado" });
+
+            encontro.Status = request.Status.ToLower();
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao atualizar status", details = ex.Message });
+        }
+    }
+
+    // PUT: api/Encontros/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> AtualizarEncontro(string id, [FromBody] EncontroRequest request)
+    {
+        try
+        {
+            var encontro = await _context.Encontros
+                .Include(e => e.Participantes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (encontro == null)
+                return NotFound(new { message = "Encontro não encontrado" });
+
+            // Verificar se local existe
+            var local = await _context.LocaisEncontro.FindAsync(request.LocalId);
+            if (local == null || !local.Ativo)
+                return BadRequest(new { message = "Local não encontrado ou inativo" });
+
+            encontro.LocalId = request.LocalId;
+            encontro.DataHora = request.DataHora;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao atualizar encontro", details = ex.Message });
+        }
+    }
+
+    // DELETE: api/Encontros/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletarEncontro(string id)
+    {
+        try
+        {
+            var encontro = await _context.Encontros
+                .Include(e => e.Feedbacks)
+                .Include(e => e.Participantes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (encontro == null)
+                return NotFound(new { message = "Encontro não encontrado" });
+
+            // Verificar se existem feedbacks
+            if (encontro.Feedbacks.Any())
+                return BadRequest(new { message = "Não é possível excluir encontro com feedbacks associados" });
+
+            // CORREÇÃO: Remover relações many-to-many primeiro
+            encontro.Participantes.Clear();
+
+            _context.Encontros.Remove(encontro);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao excluir encontro", details = ex.Message });
+        }
+    }
+
+    // GET: api/Encontros/status/{status}
+    [HttpGet("status/{status}")]
+    public async Task<ActionResult<IEnumerable<EncontroResponse>>> GetEncontrosPorStatus(string status)
+    {
+        try
+        {
+            var encontros = await _context.Encontros
+                .Include(e => e.Local)
+                .Include(e => e.Participantes)
+                .Where(e => e.Status.ToLower() == status.ToLower())
+                .Select(e => new EncontroResponse
+                {
+                    Id = e.Id,
+                    LocalId = e.LocalId,
+                    Local = new LocalEncontroInfo
+                    {
+                        Id = e.Local.Id,
+                        Nome = e.Local.Nome,
+                        Endereco = e.Local.Endereco,
+                        Capacidade = e.Local.Capacidade
+                    },
+                    DataHora = e.DataHora,
+                    Status = e.Status,
+                    DataCriacao = e.DataCriacao,
+                    Participantes = e.Participantes.Select(p => new UsuarioInfo
+                    {
+                        Id = p.Id,
+                        Nome = p.Nome,
+                        Email = p.Email,
+                        Cidade = p.Cidade
+                    }).ToList(),
+                    TotalParticipantes = e.Participantes.Count
+                })
+                .ToListAsync();
+
+            return Ok(encontros);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao buscar encontros por status", details = ex.Message });
+        }
+    }
+
+    // POST: api/Encontros/{id}/participantes/{usuarioId}
+    [HttpPost("{id}/participantes/{usuarioId}")]
+    public async Task<IActionResult> AdicionarParticipante(string id, string usuarioId)
+    {
+        try
+        {
+            var encontro = await _context.Encontros
+                .Include(e => e.Participantes)
+                .Include(e => e.Local)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (encontro == null)
+                return NotFound(new { message = "Encontro não encontrado" });
+
+            var usuario = await _context.Usuarios.FindAsync(usuarioId);
+            if (usuario == null || !usuario.Ativo)
+                return NotFound(new { message = "Usuário não encontrado ou inativo" });
+
+            // Verificar se usuário já é participante
+            if (encontro.Participantes.Any(p => p.Id == usuarioId))
+                return BadRequest(new { message = "Usuário já é participante deste encontro" });
+
+            // Verificar capacidade
+            if (encontro.Participantes.Count >= 5)
+                return BadRequest(new { message = "Encontro já atingiu o número máximo de participantes (5)" });
+
+            // Verificar capacidade do local
+            if (encontro.Participantes.Count >= encontro.Local.Capacidade)
+                return BadRequest(new { message = "Local já atingiu sua capacidade máxima" });
+
+            encontro.Participantes.Add(usuario);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao adicionar participante", details = ex.Message });
+        }
+    }
+
+    // DELETE: api/Encontros/{id}/participantes/{usuarioId}
+    [HttpDelete("{id}/participantes/{usuarioId}")]
+    public async Task<IActionResult> RemoverParticipante(string id, string usuarioId)
+    {
+        try
+        {
+            var encontro = await _context.Encontros
+                .Include(e => e.Participantes)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (encontro == null)
+                return NotFound(new { message = "Encontro não encontrado" });
+
+            var usuario = encontro.Participantes.FirstOrDefault(p => p.Id == usuarioId);
+            if (usuario == null)
+                return NotFound(new { message = "Usuário não é participante deste encontro" });
+
+            encontro.Participantes.Remove(usuario);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao remover participante", details = ex.Message });
+        }
+    }
+}
+
+// Model para atualização de status
+public class AtualizarStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }
