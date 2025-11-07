@@ -59,10 +59,28 @@ namespace Application.UseCases
 
         public async Task<LoginResponse> Login(LoginRequest request)
         {
-            var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
-            if (usuario == null || !_passwordService.VerifyPassword(request.Senha, usuario.Senha))
-                throw new Exception("Credenciais inválidas");
+            // Log para debug
+            Console.WriteLine($"Login attempt for email: {request.Email}");
 
+            var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
+
+            if (usuario == null)
+            {
+                Console.WriteLine($"Usuário não encontrado para email: {request.Email}");
+                throw new Exception("Credenciais inválidas");
+            }
+
+            Console.WriteLine($"Usuário encontrado: {usuario.Nome}, Verificando senha...");
+
+            var isPasswordValid = _passwordService.VerifyPassword(request.Senha, usuario.Senha);
+
+            if (!isPasswordValid)
+            {
+                Console.WriteLine($"Senha inválida para usuário: {usuario.Email}");
+                throw new Exception("Credenciais inválidas");
+            }
+
+            Console.WriteLine($"Login bem-sucedido para: {usuario.Email}");
             var token = _jwtService.GenerateToken(usuario);
 
             return new LoginResponse

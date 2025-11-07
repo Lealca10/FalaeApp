@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Interfaces;
+using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 public class UsuariosController : ControllerBase
 {
     private readonly DatabaseContext _context;
+    private readonly IPasswordService _passwordService;
 
-    public UsuariosController(DatabaseContext context)
+    public UsuariosController(DatabaseContext context, IPasswordService passwordService)
     {
         _context = context;
+        _passwordService = passwordService;
     }
 
     // GET: api/Usuarios
@@ -81,7 +84,7 @@ public class UsuariosController : ControllerBase
                 DataNascimento = input.DataNascimento,
                 Cidade = input.Cidade,
                 Email = input.Email,
-                Senha = input.Senha,
+                Senha = _passwordService.HashPassword(input.Senha),
                 Ativo = true
             };
 

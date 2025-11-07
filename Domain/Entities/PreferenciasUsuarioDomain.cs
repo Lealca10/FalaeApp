@@ -25,6 +25,8 @@ namespace Domain.Entities
         public bool TemFilhos { get; set; }
         public string PreferenciaAnimal { get; set; } = string.Empty; // Cão, Gato
         public string FraseDefinicao { get; set; } = string.Empty; // Mantra ou frase que define
+        public string IdiomaPreferido { get; set; } = string.Empty; // Português, Espanhol, Inglês
+        public string InvestimentoEncontro { get; set; } = string.Empty; // Pouco, Médio, Alto
 
         // Gostos pessoais como JSON ou propriedades separadas
         public string GostosPessoaisJson { get; set; } = string.Empty;

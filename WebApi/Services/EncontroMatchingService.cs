@@ -140,6 +140,8 @@ namespace WebApi.Services
             if (!string.IsNullOrEmpty(pref1.MoodFilmesSeries) && pref1.MoodFilmesSeries == pref2.MoodFilmesSeries) preferenciasIguais++;
             if (!string.IsNullOrEmpty(pref1.StatusRelacionamento) && pref1.StatusRelacionamento == pref2.StatusRelacionamento) preferenciasIguais++;
             if (!string.IsNullOrEmpty(pref1.PreferenciaAnimal) && pref1.PreferenciaAnimal == pref2.PreferenciaAnimal) preferenciasIguais++;
+            if (!string.IsNullOrEmpty(pref1.IdiomaPreferido) && pref1.IdiomaPreferido == pref2.IdiomaPreferido) preferenciasIguais++;
+            if (!string.IsNullOrEmpty(pref1.InvestimentoEncontro) && pref1.InvestimentoEncontro == pref2.InvestimentoEncontro) preferenciasIguais++;
 
             // Comparar nível de estresse (tolerância de ±2)
             if (Math.Abs(pref1.NivelEstresse - pref2.NivelEstresse) <= 2) preferenciasIguais++;

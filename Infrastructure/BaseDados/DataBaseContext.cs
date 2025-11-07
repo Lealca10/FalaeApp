@@ -24,6 +24,9 @@ namespace Infrastructure.Data
                 entity.Property(u => u.Id).HasMaxLength(36);
                 entity.HasIndex(u => u.Email).IsUnique();
                 entity.HasIndex(u => u.Cpf).IsUnique();
+                entity.Property(u => u.Senha)
+                   .IsRequired() 
+                   .HasMaxLength(255);
 
                 // 1:1 com Preferencias
                 entity.HasOne(u => u.Preferencias)
@@ -46,6 +49,8 @@ namespace Infrastructure.Data
                 entity.HasKey(p => p.Id);
                 entity.Property(p => p.Id).HasMaxLength(36);
                 entity.Property(p => p.UsuarioId).HasMaxLength(36);
+                entity.Property(p => p.IdiomaPreferido).HasMaxLength(20);
+                entity.Property(p => p.InvestimentoEncontro).HasMaxLength(20);
             });
 
             // LocalEncontroDomain

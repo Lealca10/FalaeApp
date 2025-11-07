@@ -25,5 +25,7 @@ namespace Application.Request
         public bool TemFilhos { get; set; }
         public string PreferenciaAnimal { get; set; } = string.Empty;
         public string FraseDefinicao { get; set; } = string.Empty;
+        public string IdiomaPreferido { get; set; } = string.Empty;
+        public string InvestimentoEncontro { get; set; } = string.Empty;
     }
 }

@@ -152,6 +152,8 @@ public class PreferenciasController : ControllerBase
                 TemFilhos = input.TemFilhos,
                 PreferenciaAnimal = input.PreferenciaAnimal,
                 FraseDefinicao = input.FraseDefinicao,
+                IdiomaPreferido = input.IdiomaPreferido,
+                InvestimentoEncontro = input.InvestimentoEncontro,
                 GostosPessoaisJson = input.GostosPessoaisJson,
                 DataAtualizacao = DateTime.UtcNow
             };
@@ -274,5 +276,7 @@ public class PreferenciasInput
     public bool TemFilhos { get; set; }
     public string PreferenciaAnimal { get; set; } = string.Empty;
     public string FraseDefinicao { get; set; } = string.Empty;
+    public string IdiomaPreferido { get; set; } = string.Empty;
+    public string InvestimentoEncontro { get; set; } = string.Empty;
     public string GostosPessoaisJson { get; set; } = string.Empty;
 }
