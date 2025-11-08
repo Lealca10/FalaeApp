@@ -117,6 +117,7 @@ public class LocaisEncontroController : ControllerBase
                 Endereco = input.Endereco,
                 Capacidade = input.Capacidade,
                 Ativo = input.Ativo,
+                ImagemUrl = input.ImagemUrl ?? string.Empty,
                 DataCriacao = DateTime.UtcNow
             };
 
@@ -130,6 +131,7 @@ public class LocaisEncontroController : ControllerBase
                 local.Endereco,
                 local.Capacidade,
                 local.Ativo,
+                local.ImagemUrl,
                 local.DataCriacao,
                 message = "Local de encontro criado com sucesso"
             });
@@ -161,6 +163,7 @@ public class LocaisEncontroController : ControllerBase
             local.Endereco = input.Endereco;
             local.Capacidade = input.Capacidade;
             local.Ativo = input.Ativo;
+            local.ImagemUrl = input.ImagemUrl;
 
             await _context.SaveChangesAsync();
 
@@ -280,4 +283,5 @@ public class LocalEncontroInput
     public string Endereco { get; set; } = string.Empty;
     public int Capacidade { get; set; }
     public bool Ativo { get; set; } = true;
+    public string ImagemUrl { get; set; } = string.Empty;
 }

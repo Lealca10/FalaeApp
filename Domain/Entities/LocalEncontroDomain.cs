@@ -14,6 +14,7 @@ namespace Domain.Entities
         public int Capacidade { get; set; }
         public bool Ativo { get; set; } = true;
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+        public string ImagemUrl { get; set; } = string.Empty;
 
         // Navigation properties
         public ICollection<EncontroDomain> Encontros { get; set; } = new List<EncontroDomain>();

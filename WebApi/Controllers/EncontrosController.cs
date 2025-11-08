@@ -38,7 +38,8 @@ public class EncontrosController : ControllerBase
                         Id = e.Local.Id,
                         Nome = e.Local.Nome,
                         Endereco = e.Local.Endereco,
-                        Capacidade = e.Local.Capacidade
+                        Capacidade = e.Local.Capacidade,
+                        ImagemUrl = e.Local.ImagemUrl
                     },
                     DataHora = e.DataHora,
                     Status = e.Status,

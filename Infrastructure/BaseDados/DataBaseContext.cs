@@ -58,6 +58,8 @@ namespace Infrastructure.Data
             {
                 entity.HasKey(l => l.Id);
                 entity.Property(l => l.Id).HasMaxLength(36);
+
+                entity.Property(l => l.ImagemUrl).HasMaxLength(500);
             });
 
             // EncontroDomain
