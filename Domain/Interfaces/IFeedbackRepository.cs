@@ -20,5 +20,7 @@ namespace Domain.Interfaces
         Task DeleteAsync(string id);
         Task<bool> UsuarioJaDeuFeedbackAsync(string encontroId, string usuarioId);
         Task<IEnumerable<FeedbackEncontroDomain>> GetAllAsync();
+        Task<bool> ExistsAsync(string encontroId, string usuarioId);
+        Task<FeedbackEncontroDomain> CreateAsync(FeedbackEncontroDomain feedback);
     }
 }

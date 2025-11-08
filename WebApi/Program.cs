@@ -74,6 +74,7 @@ builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 // Use Cases
 builder.Services.AddScoped<IUsuarioUseCase, UsuarioUseCase>();
 builder.Services.AddScoped<IPreferenciasUseCase, PreferenciasUseCase>();
+builder.Services.AddScoped<IFeedbackUseCase, FeedbackUseCase>();
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
