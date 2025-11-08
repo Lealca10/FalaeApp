@@ -28,6 +28,7 @@ public class LocaisEncontroController : ControllerBase
                     l.Endereco,
                     l.Capacidade,
                     l.Ativo,
+                    l.ImagemUrl,
                     l.DataCriacao
                 })
                 .ToListAsync();
@@ -55,6 +56,7 @@ public class LocaisEncontroController : ControllerBase
                     l.Endereco,
                     l.Capacidade,
                     l.Ativo,
+                    l.ImagemUrl,
                     l.DataCriacao
                 })
                 .ToListAsync();
@@ -82,6 +84,7 @@ public class LocaisEncontroController : ControllerBase
                     l.Endereco,
                     l.Capacidade,
                     l.Ativo,
+                    l.ImagemUrl,
                     l.DataCriacao
                 })
                 .FirstOrDefaultAsync();
