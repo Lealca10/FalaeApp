@@ -38,7 +38,9 @@ public class PreferenciasController : ControllerBase
                 p.TemFilhos,
                 p.PreferenciaAnimal,
                 p.FraseDefinicao,
-                p.GostosPessoaisJson,
+                IdiomaPreferido = p.IdiomaPreferido ?? string.Empty, // Trata NULL
+                InvestimentoEncontro = p.InvestimentoEncontro ?? string.Empty, // Trata NULL
+                GostosPessoaisJson = p.GostosPessoaisJson ?? string.Empty, // Trata NULL
                 p.DataAtualizacao
             })
             .ToListAsync();
@@ -71,7 +73,9 @@ public class PreferenciasController : ControllerBase
                 p.TemFilhos,
                 p.PreferenciaAnimal,
                 p.FraseDefinicao,
-                p.GostosPessoaisJson,
+                IdiomaPreferido = p.IdiomaPreferido ?? string.Empty, // Trata NULL
+                InvestimentoEncontro = p.InvestimentoEncontro ?? string.Empty, // Trata NULL
+                GostosPessoaisJson = p.GostosPessoaisJson ?? string.Empty, // Trata NULL
                 p.DataAtualizacao
             })
             .FirstOrDefaultAsync();
@@ -107,7 +111,9 @@ public class PreferenciasController : ControllerBase
                 p.TemFilhos,
                 p.PreferenciaAnimal,
                 p.FraseDefinicao,
-                p.GostosPessoaisJson,
+                IdiomaPreferido = p.IdiomaPreferido ?? string.Empty, // Trata NULL
+                InvestimentoEncontro = p.InvestimentoEncontro ?? string.Empty, // Trata NULL
+                GostosPessoaisJson = p.GostosPessoaisJson ?? string.Empty, // Trata NULL
                 p.DataAtualizacao
             })
             .FirstOrDefaultAsync();
@@ -152,9 +158,9 @@ public class PreferenciasController : ControllerBase
                 TemFilhos = input.TemFilhos,
                 PreferenciaAnimal = input.PreferenciaAnimal,
                 FraseDefinicao = input.FraseDefinicao,
-                IdiomaPreferido = input.IdiomaPreferido,
-                InvestimentoEncontro = input.InvestimentoEncontro,
-                GostosPessoaisJson = input.GostosPessoaisJson,
+                IdiomaPreferido = input.IdiomaPreferido ?? string.Empty, // Trata NULL
+                InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty, // Trata NULL
+                GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty, // Trata NULL
                 DataAtualizacao = DateTime.UtcNow
             };
 
@@ -199,7 +205,9 @@ public class PreferenciasController : ControllerBase
             preferencias.TemFilhos = input.TemFilhos;
             preferencias.PreferenciaAnimal = input.PreferenciaAnimal;
             preferencias.FraseDefinicao = input.FraseDefinicao;
-            preferencias.GostosPessoaisJson = input.GostosPessoaisJson;
+            preferencias.IdiomaPreferido = input.IdiomaPreferido ?? string.Empty; // Trata NULL
+            preferencias.InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty; // Trata NULL
+            preferencias.GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty; // Trata NULL
             preferencias.DataAtualizacao = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -276,7 +284,7 @@ public class PreferenciasInput
     public bool TemFilhos { get; set; }
     public string PreferenciaAnimal { get; set; } = string.Empty;
     public string FraseDefinicao { get; set; } = string.Empty;
-    public string IdiomaPreferido { get; set; } = string.Empty;
-    public string InvestimentoEncontro { get; set; } = string.Empty;
-    public string GostosPessoaisJson { get; set; } = string.Empty;
+    public string? IdiomaPreferido { get; set; } // Permite NULL
+    public string? InvestimentoEncontro { get; set; } // Permite NULL
+    public string? GostosPessoaisJson { get; set; } // Permite NULL
 }
