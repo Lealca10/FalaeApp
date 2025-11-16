@@ -85,16 +85,42 @@ namespace Application.UseCases
             };
         }
 
-        public async Task<bool> RecuperarSenha(string email)
+        public async Task<bool> RecuperarSenha(RecuperarSenhaRequest request)
         {
-            var usuario = await _usuarioRepository.GetByEmailAsync(email);
-            if (usuario != null)
-            {
-                // aqui entraria lógica real de envio de email
-                return true;
-            }
+            var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
+            if (usuario == null)
+                throw new Exception("Usuário não encontrado");
 
-            return false;
+            // Aqui você deve validar o código. Por enquanto, vamos aceitar qualquer código "0000"
+            if (request.Codigo != "0000")
+                throw new Exception("Código inválido");
+
+            // Atualiza a senha
+            usuario.Senha = request.NovaSenha; // se quiser, ainda pode criptografar aqui
+            await _usuarioRepository.UpdateAsync(usuario);
+
+            return true;
+        }
+
+        public async Task<bool> AlterarSenha(string email, string senhaAtual, string novaSenha)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(novaSenha))
+                throw new Exception("Email e nova senha são obrigatórios");
+
+            var usuario = await _usuarioRepository.GetByEmailAsync(email);
+
+            if (usuario == null)
+                throw new Exception("Usuário não encontrado");
+
+            // Se quiser validar a senha atual, descomente esta parte
+            if (!string.IsNullOrEmpty(senhaAtual) && usuario.Senha != senhaAtual)
+                throw new Exception("Senha atual inválida");
+
+            usuario.Senha = novaSenha; // Atualiza para a nova senha
+
+            await _usuarioRepository.UpdateAsync(usuario); // Certifique-se que o método UpdateAsync existe no seu repository
+
+            return true;
         }
 
         private int CalcularIdade(DateTime dataNascimento)

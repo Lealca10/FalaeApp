@@ -31,21 +31,50 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("recuperar-senha")]
-        public async Task<IActionResult> RecuperarSenha([FromBody] RecuperarSenhaRequest request)
+        [HttpPost("alterar-senha")]
+        public async Task<IActionResult> AlterarSenha([FromBody] AlterarSenhaRequest request)
         {
             try
             {
-                var result = await _usuarioUseCase.RecuperarSenha(request.Email);
-                if (result)
-                    return Ok(new { mensagem = "E-mail de recuperação enviado com sucesso." });
+                var result = await _usuarioUseCase.AlterarSenha(request.Email, request.SenhaAtual, request.NovaSenha);
 
-                return NotFound(new { mensagem = "E-mail não encontrado." });
+                if (result)
+                    return Ok(new { mensagem = "Senha alterada com sucesso" });
+
+                return BadRequest(new { mensagem = "Não foi possível alterar a senha" });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+
+        [HttpPost("recuperar-senha")]
+        public async Task<IActionResult> RecuperarSenha([FromBody] RecuperarSenhaRequest request)
+        {
+            try
+            {
+                var result = await _usuarioUseCase.RecuperarSenha(request);
+                if (result)
+                    return Ok(new { mensagem = "Senha alterada com sucesso." });
+
+                return BadRequest(new { mensagem = "Não foi possível alterar a senha." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+    }
+}
+
+namespace Application.Request
+{
+    public class AlterarSenhaRequest
+    {
+        public string Email { get; set; } = null!;
+        public string SenhaAtual { get; set; } = null!;
+        public string NovaSenha { get; set; } = null!;
     }
 }

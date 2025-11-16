@@ -12,6 +12,7 @@ namespace Application.Interfaces
     {
         Task<UsuarioResponse> CadastrarUsuario(CadastroUsuarioRequest request);
         Task<LoginResponse> Login(LoginRequest request);
-        Task<bool> RecuperarSenha(string email);
+        Task<bool> RecuperarSenha(RecuperarSenhaRequest request);
+        Task<bool> AlterarSenha(string email, string senhaAtual, string novaSenha);
     }
 }
