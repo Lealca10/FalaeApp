@@ -25,10 +25,33 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        //public async Task<UsuarioDomain> GetByEmailAsync(string email)
+        //{
+          //  return await _context.Usuarios
+            //    .FirstOrDefaultAsync(u => u.Email == email);
+        //}
+
         public async Task<UsuarioDomain> GetByEmailAsync(string email)
         {
-            return await _context.Usuarios
+            var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Email == email);
+
+            // LOG CRÍTICO
+            Console.WriteLine($"=== REPOSITORY DEBUG ===");
+            Console.WriteLine($"Usuário: {usuario?.Nome}");
+            Console.WriteLine($"Email: {usuario?.Email}");
+            Console.WriteLine($"Senha PROPRIEDADE: {usuario?.Senha}");
+            Console.WriteLine($"Senha is NULL: {usuario?.Senha == null}");
+            Console.WriteLine($"Todas as propriedades:");
+            Console.WriteLine($"  Id: {usuario?.Id}");
+            Console.WriteLine($"  Nome: {usuario?.Nome}");
+            Console.WriteLine($"  Email: {usuario?.Email}");
+            Console.WriteLine($"  Senha: {usuario?.Senha}");
+            Console.WriteLine($"  Cidade: {usuario?.Cidade}");
+            Console.WriteLine($"  Ativo: {usuario?.Ativo}");
+            Console.WriteLine($"=== FIM DEBUG ===");
+
+            return usuario;
         }
 
         public async Task<IEnumerable<UsuarioDomain>> GetAllAsync()

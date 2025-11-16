@@ -131,4 +131,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+Console.WriteLine("*** TESTE BCRYPT ***");
+bool ok = BCrypt.Net.BCrypt.Verify("amds1234", "$2a$12$uxYHNkRM5AbOHmZSTerN9OW0xj9L5PwypZgtMsp1cvSJ/jF8MWCsu");
+Console.WriteLine("Resultado: " + ok);
+
 app.Run();

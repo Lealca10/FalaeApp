@@ -6,13 +6,6 @@ using Application.Interfaces;
 
 namespace Application.UseCases
 {
-    public interface IUsuarioUseCase
-    {
-        Task<UsuarioResponse> CadastrarUsuario(CadastroUsuarioRequest request);
-        Task<LoginResponse> Login(LoginRequest request);
-        Task<bool> RecuperarSenha(string email);
-    }
-
     public class UsuarioUseCase : IUsuarioUseCase
     {
         private readonly IUsuarioRepository _usuarioRepository;
@@ -31,7 +24,10 @@ namespace Application.UseCases
 
         public async Task<UsuarioResponse> CadastrarUsuario(CadastroUsuarioRequest request)
         {
-            // Validar se email já existe
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
+                throw new Exception("Email e senha são obrigatórios");
+
+            // Valida se o email já existe
             var usuarioExistente = await _usuarioRepository.GetByEmailAsync(request.Email);
             if (usuarioExistente != null)
                 throw new Exception("Email já cadastrado");
@@ -43,7 +39,7 @@ namespace Application.UseCases
                 DataNascimento = request.DataNascimento,
                 Cidade = request.Cidade,
                 Email = request.Email,
-                Senha = _passwordService.HashPassword(request.Senha)
+                Senha = request.Senha // senha em texto claro
             };
 
             await _usuarioRepository.AddAsync(usuario);
@@ -59,28 +55,21 @@ namespace Application.UseCases
 
         public async Task<LoginResponse> Login(LoginRequest request)
         {
-            // Log para debug
-            Console.WriteLine($"Login attempt for email: {request.Email}");
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
+                throw new Exception("Email e senha são obrigatórios");
 
             var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
 
             if (usuario == null)
-            {
-                Console.WriteLine($"Usuário não encontrado para email: {request.Email}");
                 throw new Exception("Credenciais inválidas");
-            }
 
-            Console.WriteLine($"Usuário encontrado: {usuario.Nome}, Verificando senha...");
+            if (string.IsNullOrEmpty(usuario.Senha))
+                throw new Exception("Usuário não possui senha cadastrada");
 
-            var isPasswordValid = _passwordService.VerifyPassword(request.Senha, usuario.Senha);
-
-            if (!isPasswordValid)
-            {
-                Console.WriteLine($"Senha inválida para usuário: {usuario.Email}");
+            // Comparação direta da senha em texto claro
+            if (usuario.Senha != request.Senha)
                 throw new Exception("Credenciais inválidas");
-            }
 
-            Console.WriteLine($"Login bem-sucedido para: {usuario.Email}");
             var token = _jwtService.GenerateToken(usuario);
 
             return new LoginResponse
@@ -101,9 +90,10 @@ namespace Application.UseCases
             var usuario = await _usuarioRepository.GetByEmailAsync(email);
             if (usuario != null)
             {
-                // Implementar lógica de envio de email
+                // aqui entraria lógica real de envio de email
                 return true;
             }
+
             return false;
         }
 

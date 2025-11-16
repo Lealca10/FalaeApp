@@ -129,7 +129,8 @@ public class UsuariosController : ControllerBase
             usuario.DataNascimento = input.DataNascimento;
             usuario.Cidade = input.Cidade;
             usuario.Email = input.Email;
-            usuario.Senha = input.Senha;
+            usuario.Senha = _passwordService.HashPassword(input.Senha);
+
 
             await _context.SaveChangesAsync();
 
@@ -161,6 +162,7 @@ public class UsuariosController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
+
 }
 
 // DTO de input para Usuário
@@ -173,3 +175,4 @@ public class UsuarioInput
     public string Email { get; set; } = string.Empty;
     public string Senha { get; set; } = string.Empty;
 }
+

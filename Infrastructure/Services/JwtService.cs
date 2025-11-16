@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Application.Interfaces;
+using Domain.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Application.Interfaces;
-using Domain.Entities;
-using System;
 
 namespace Infrastructure.Services
 {
@@ -15,30 +15,45 @@ namespace Infrastructure.Services
 
         public JwtService(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public string GenerateToken(UsuarioDomain usuario)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
+            if (usuario == null)
+                throw new ArgumentNullException(nameof(usuario));
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+            // Pegando chave secreta do appsettings.json
+            string secret = _configuration["Jwt:Secret"]
+                ?? throw new Exception("Jwt:Secret não configurado");
+
+            string issuer = _configuration["Jwt:Issuer"]
+                ?? throw new Exception("Jwt:Issuer não configurado");
+
+            string audience = _configuration["Jwt:Audience"]
+                ?? throw new Exception("Jwt:Audience não configurado");
+
+            int expirationMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, usuario.Id),
-                    new Claim(ClaimTypes.Name, usuario.Nome),
-                    new Claim(ClaimTypes.Email, usuario.Email)
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(int.Parse(_configuration["Jwt:ExpirationInMinutes"])),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature)
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.Email),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

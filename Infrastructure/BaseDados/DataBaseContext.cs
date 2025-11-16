@@ -24,9 +24,18 @@ namespace Infrastructure.Data
                 entity.Property(u => u.Id).HasMaxLength(36);
                 entity.HasIndex(u => u.Email).IsUnique();
                 entity.HasIndex(u => u.Cpf).IsUnique();
+
+                // MAPEAMENTO CORRETO DE TODAS AS PROPRIEDADES
+                entity.Property(u => u.Nome).HasColumnName("nome");
+                entity.Property(u => u.Cpf).HasColumnName("cpf");
+                entity.Property(u => u.DataNascimento).HasColumnName("datanascimento");
+                entity.Property(u => u.Cidade).HasColumnName("cidade");
+                entity.Property(u => u.Email).HasColumnName("email");
                 entity.Property(u => u.Senha)
-                   .IsRequired() 
-                   .HasMaxLength(255);
+                      .IsRequired()
+                      .HasMaxLength(255)
+                      .HasColumnName("senha");
+                entity.Property(u => u.Ativo).HasColumnName("ativo");
 
                 // 1:1 com Preferencias
                 entity.HasOne(u => u.Preferencias)

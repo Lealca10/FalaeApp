@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Application.Request;
-using Application.UsesCases;
-using Application.UseCases;
+using Application.Interfaces;
 
 namespace WebApi.Controllers
 {
@@ -19,15 +18,17 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            try
-            {
-                var result = await _usuarioUseCase.Login(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+            if (request == null)
+                return BadRequest(new { message = "Request não pode ser nulo" });
+
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest(new { message = "Email obrigatório" });
+
+            if (string.IsNullOrEmpty(request.Senha))
+                return BadRequest(new { message = "Senha obrigatória" });
+
+            var result = await _usuarioUseCase.Login(request);
+            return Ok(result);
         }
 
         [HttpPost("recuperar-senha")]
@@ -37,9 +38,8 @@ namespace WebApi.Controllers
             {
                 var result = await _usuarioUseCase.RecuperarSenha(request.Email);
                 if (result)
-                {
                     return Ok(new { mensagem = "E-mail de recuperação enviado com sucesso." });
-                }
+
                 return NotFound(new { mensagem = "E-mail não encontrado." });
             }
             catch (Exception ex)
