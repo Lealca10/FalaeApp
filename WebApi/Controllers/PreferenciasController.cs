@@ -124,7 +124,7 @@ public class PreferenciasController : ControllerBase
         return Ok(preferencias);
     }
 
-    // POST: api/Preferencias
+    // POST: api/Preferencias (agora com comportamento UPSERT)
     [HttpPost]
     public async Task<ActionResult<object>> PostPreferencias([FromBody] PreferenciasInput input)
     {
@@ -133,86 +133,80 @@ public class PreferenciasController : ControllerBase
             // Verificar se usuário existe
             var usuario = await _context.Usuarios.FindAsync(input.UsuarioId);
             if (usuario == null || !usuario.Ativo)
-                return BadRequest(new { message = "Usuário não encontrado" });
+                return BadRequest(new { message = "Usuário não encontrado ou inativo" });
 
-            // Verificar se já existe preferência para este usuário
-            if (await _context.PreferenciasUsuarios.AnyAsync(p => p.UsuarioId == input.UsuarioId))
-                return BadRequest(new { message = "Este usuário já possui preferências cadastradas" });
+            // Buscar preferências existentes
+            var existente = await _context.PreferenciasUsuarios
+                .FirstOrDefaultAsync(p => p.UsuarioId == input.UsuarioId);
 
-            var preferencias = new PreferenciasUsuarioDomain
+            if (existente == null)
             {
-                Id = Guid.NewGuid().ToString(),
-                UsuarioId = input.UsuarioId,
-                HorarioFavorito = input.HorarioFavorito,
-                TipoComidaFavorito = input.TipoComidaFavorito,
-                NivelEstresse = input.NivelEstresse,
-                GostaViajar = input.GostaViajar,
-                PreferenciaLocal = input.PreferenciaLocal,
-                PreferenciaAmbiente = input.PreferenciaAmbiente,
-                ImportanciaEspiritualidade = input.ImportanciaEspiritualidade,
-                PosicaoPolitica = input.PosicaoPolitica,
-                Genero = input.Genero,
-                PreferenciaMusical = input.PreferenciaMusical,
-                MoodFilmesSeries = input.MoodFilmesSeries,
-                StatusRelacionamento = input.StatusRelacionamento,
-                TemFilhos = input.TemFilhos,
-                PreferenciaAnimal = input.PreferenciaAnimal,
-                FraseDefinicao = input.FraseDefinicao,
-                IdiomaPreferido = input.IdiomaPreferido ?? string.Empty, // Trata NULL
-                InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty, // Trata NULL
-                GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty, // Trata NULL
-                DataAtualizacao = DateTime.UtcNow
-            };
+                // CREATE
+                var preferencias = new PreferenciasUsuarioDomain
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UsuarioId = input.UsuarioId,
+                    HorarioFavorito = input.HorarioFavorito,
+                    TipoComidaFavorito = input.TipoComidaFavorito,
+                    NivelEstresse = input.NivelEstresse,
+                    GostaViajar = input.GostaViajar,
+                    PreferenciaLocal = input.PreferenciaLocal,
+                    PreferenciaAmbiente = input.PreferenciaAmbiente,
+                    ImportanciaEspiritualidade = input.ImportanciaEspiritualidade,
+                    PosicaoPolitica = input.PosicaoPolitica,
+                    Genero = input.Genero,
+                    PreferenciaMusical = input.PreferenciaMusical,
+                    MoodFilmesSeries = input.MoodFilmesSeries,
+                    StatusRelacionamento = input.StatusRelacionamento,
+                    TemFilhos = input.TemFilhos,
+                    PreferenciaAnimal = input.PreferenciaAnimal,
+                    FraseDefinicao = input.FraseDefinicao,
+                    IdiomaPreferido = input.IdiomaPreferido ?? string.Empty,
+                    InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty,
+                    GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty,
+                    DataAtualizacao = DateTime.UtcNow
+                };
 
-            _context.PreferenciasUsuarios.Add(preferencias);
-            await _context.SaveChangesAsync();
+                _context.PreferenciasUsuarios.Add(preferencias);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPreferencia), new { id = preferencias.Id }, new
+                return CreatedAtAction(nameof(GetPreferencia), new { id = preferencias.Id }, new
+                {
+                    message = "Preferências criadas com sucesso",
+                    data = new { preferencias.Id, preferencias.UsuarioId }
+                });
+            }
+            else
             {
-                preferencias.Id,
-                preferencias.UsuarioId,
-                message = "Preferências criadas com sucesso"
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
+                // UPDATE
+                existente.HorarioFavorito = input.HorarioFavorito;
+                existente.TipoComidaFavorito = input.TipoComidaFavorito;
+                existente.NivelEstresse = input.NivelEstresse;
+                existente.GostaViajar = input.GostaViajar;
+                existente.PreferenciaLocal = input.PreferenciaLocal;
+                existente.PreferenciaAmbiente = input.PreferenciaAmbiente;
+                existente.ImportanciaEspiritualidade = input.ImportanciaEspiritualidade;
+                existente.PosicaoPolitica = input.PosicaoPolitica;
+                existente.Genero = input.Genero;
+                existente.PreferenciaMusical = input.PreferenciaMusical;
+                existente.MoodFilmesSeries = input.MoodFilmesSeries;
+                existente.StatusRelacionamento = input.StatusRelacionamento;
+                existente.TemFilhos = input.TemFilhos;
+                existente.PreferenciaAnimal = input.PreferenciaAnimal;
+                existente.FraseDefinicao = input.FraseDefinicao;
+                existente.IdiomaPreferido = input.IdiomaPreferido ?? string.Empty;
+                existente.InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty;
+                existente.GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty;
+                existente.DataAtualizacao = DateTime.UtcNow;
 
-    // PUT: api/Preferencias/{id}
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutPreferencias(string id, [FromBody] PreferenciasInput input)
-    {
-        try
-        {
-            var preferencias = await _context.PreferenciasUsuarios.FindAsync(id);
-            if (preferencias == null)
-                return NotFound(new { message = "Preferências não encontradas" });
+                await _context.SaveChangesAsync();
 
-            preferencias.HorarioFavorito = input.HorarioFavorito;
-            preferencias.TipoComidaFavorito = input.TipoComidaFavorito;
-            preferencias.NivelEstresse = input.NivelEstresse;
-            preferencias.GostaViajar = input.GostaViajar;
-            preferencias.PreferenciaLocal = input.PreferenciaLocal;
-            preferencias.PreferenciaAmbiente = input.PreferenciaAmbiente;
-            preferencias.ImportanciaEspiritualidade = input.ImportanciaEspiritualidade;
-            preferencias.PosicaoPolitica = input.PosicaoPolitica;
-            preferencias.Genero = input.Genero;
-            preferencias.PreferenciaMusical = input.PreferenciaMusical;
-            preferencias.MoodFilmesSeries = input.MoodFilmesSeries;
-            preferencias.StatusRelacionamento = input.StatusRelacionamento;
-            preferencias.TemFilhos = input.TemFilhos;
-            preferencias.PreferenciaAnimal = input.PreferenciaAnimal;
-            preferencias.FraseDefinicao = input.FraseDefinicao;
-            preferencias.IdiomaPreferido = input.IdiomaPreferido ?? string.Empty; // Trata NULL
-            preferencias.InvestimentoEncontro = input.InvestimentoEncontro ?? string.Empty; // Trata NULL
-            preferencias.GostosPessoaisJson = input.GostosPessoaisJson ?? string.Empty; // Trata NULL
-            preferencias.DataAtualizacao = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+                return Ok(new
+                {
+                    message = "Preferências atualizadas com sucesso",
+                    data = new { existente.Id, existente.UsuarioId }
+                });
+            }
         }
         catch (Exception ex)
         {
