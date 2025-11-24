@@ -1,11 +1,15 @@
 ﻿using Application.response;
-using WebApi.Models.Request; // CORRIGIDO: usar WebApi.Models.Request
+using Domain.Entities;
+using WebApi.Models.Request;
 
 namespace WebApi.Services
 {
     public interface IEncontroMatchingService
     {
+        // Método original (mantido para compatibilidade)
         Task<MatchingResult> EncontrarParticipantesCompatíveis(MatchingRequest request);
-        int CalcularPreferenciasCompatíveis(Domain.Entities.PreferenciasUsuarioDomain pref1, Domain.Entities.PreferenciasUsuarioDomain pref2);
+
+        // Nova sobrecarga com usuário logado
+        Task<MatchingResult> EncontrarParticipantesCompatíveis(MatchingRequest request, UsuarioDomain usuarioLogado);
     }
 }
