@@ -6,7 +6,6 @@ using WebApi.Services;
 using WebApi.Models.Request;
 using Application.response;
 using Infrastructure.Data;
-using Microsoft.AspNetCore.Identity;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -14,14 +13,11 @@ public class EncontrosController : ControllerBase
 {
     private readonly DatabaseContext _context;
     private readonly IEncontroMatchingService _matchingService;
-    private readonly UserManager<UsuarioDomain> _userManager;
 
-    public EncontrosController(DatabaseContext context, IEncontroMatchingService matchingService,
-        UserManager<UsuarioDomain> userManager)
+    public EncontrosController(DatabaseContext context, IEncontroMatchingService matchingService)
     {
         _context = context;
         _matchingService = matchingService;
-        _userManager = userManager;
     }
 
     // GET: api/Encontros
@@ -130,19 +126,7 @@ public class EncontrosController : ControllerBase
             if (local.Capacidade < request.NumeroParticipantes)
                 return BadRequest(new { message = "Local não tem capacidade para este número de participantes" });
 
-            // OBTER USUÁRIO LOGADO
-            var usuarioLogado = await _userManager.GetUserAsync(User);
-
-            if (usuarioLogado == null)
-                return Unauthorized(new { message = "Usuário não autenticado" });
-
-            // Carregar preferências do usuário logado
-            await _context.Entry(usuarioLogado)
-                .Reference(u => u.Preferencias)
-                .LoadAsync();
-
-            // PASSA O USUÁRIO LOGADO PARA O MATCHING
-            var resultado = await _matchingService.EncontrarParticipantesCompatíveis(request, usuarioLogado);
+            var resultado = await _matchingService.EncontrarParticipantesCompatíveis(request);
 
             if (!resultado.Sucesso)
                 return BadRequest(resultado);
@@ -166,19 +150,7 @@ public class EncontrosController : ControllerBase
             if (local == null || !local.Ativo)
                 return BadRequest(new { message = "Local não encontrado ou inativo" });
 
-            // OBTER USUÁRIO LOGADO
-            var usuarioLogado = await _userManager.GetUserAsync(User);
-
-
-            if (usuarioLogado == null)
-                return Unauthorized(new { message = "Usuário não autenticado" });
-
-            // Carregar preferências do usuário logado
-            await _context.Entry(usuarioLogado)
-                .Reference(u => u.Preferencias)
-                .LoadAsync();
-
-            // Buscar participantes compatíveis INCLUINDO O USUÁRIO LOGADO
+            // Buscar participantes compatíveis
             var matchingRequest = new MatchingRequest
             {
                 LocalId = request.LocalId,
@@ -187,7 +159,7 @@ public class EncontrosController : ControllerBase
                 NumeroParticipantes = 5
             };
 
-            var matchingResult = await _matchingService.EncontrarParticipantesCompatíveis(matchingRequest, usuarioLogado);
+            var matchingResult = await _matchingService.EncontrarParticipantesCompatíveis(matchingRequest);
 
             if (!matchingResult.Sucesso)
                 return BadRequest(new { message = matchingResult.Mensagem });
@@ -202,8 +174,7 @@ public class EncontrosController : ControllerBase
                 DataCriacao = DateTime.UtcNow
             };
 
-            // Adicionar participantes (incluindo o usuário logado)
-            // O matching service já retorna a lista completa com o usuário logado incluso
+            // Adicionar participantes
             foreach (var participanteInfo in matchingResult.ParticipantesSugeridos)
             {
                 var usuario = await _context.Usuarios.FindAsync(participanteInfo.Id);

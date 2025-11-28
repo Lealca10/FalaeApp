@@ -16,15 +16,7 @@ namespace WebApi.Services
             _context = context;
         }
 
-        // Implementação do método da interface (apenas MatchingRequest)
         public async Task<MatchingResult> EncontrarParticipantesCompatíveis(MatchingRequest request)
-        {
-            // Chama o método com usuário logado como null
-            return await EncontrarParticipantesCompatíveis(request, null);
-        }
-
-        // Implementação da sobrecarga com usuário logado
-        public async Task<MatchingResult> EncontrarParticipantesCompatíveis(MatchingRequest request, UsuarioDomain usuarioLogado)
         {
             try
             {
@@ -34,15 +26,7 @@ namespace WebApi.Services
                     .Where(u => u.Ativo && u.Preferencias != null)
                     .ToListAsync();
 
-                // Se temos um usuário logado, excluí-lo da lista de possíveis matches
-                if (usuarioLogado != null)
-                {
-                    usuariosComPreferencias = usuariosComPreferencias
-                        .Where(u => u.Id != usuarioLogado.Id)
-                        .ToList();
-                }
-
-                if (usuariosComPreferencias.Count < request.NumeroParticipantes - (usuarioLogado != null ? 1 : 0))
+                if (usuariosComPreferencias.Count < request.NumeroParticipantes)
                 {
                     return new MatchingResult
                     {
@@ -52,13 +36,7 @@ namespace WebApi.Services
                 }
 
                 // Algoritmo de matching otimizado
-                var melhorGrupo = await EncontrarMelhorGrupo(usuariosComPreferencias, request, usuarioLogado);
-
-                // Se temos usuário logado, adicioná-lo ao grupo final
-                if (usuarioLogado != null && melhorGrupo.Count == request.NumeroParticipantes - 1)
-                {
-                    melhorGrupo.Insert(0, usuarioLogado);
-                }
+                var melhorGrupo = await EncontrarMelhorGrupo(usuariosComPreferencias, request);
 
                 if (melhorGrupo.Count == request.NumeroParticipantes)
                 {
@@ -95,48 +73,33 @@ namespace WebApi.Services
             }
         }
 
-        private async Task<List<UsuarioDomain>> EncontrarMelhorGrupo(List<UsuarioDomain> usuarios, MatchingRequest request, UsuarioDomain usuarioLogado = null)
+        private async Task<List<UsuarioDomain>> EncontrarMelhorGrupo(List<UsuarioDomain> usuarios, MatchingRequest request)
         {
             var melhorGrupo = new List<UsuarioDomain>();
             var melhorCompatibilidade = 0;
 
-            // Se temos usuário logado, usamos ele como base para o matching
-            if (usuarioLogado != null)
+            // Tentar diferentes combinações (limitado para performance)
+            for (int i = 0; i < Math.Min(usuarios.Count, 10); i++) // Testa no máximo 10 usuários como base
             {
-                var grupo = new List<UsuarioDomain>();
+                var usuarioBase = usuarios[i];
+                var grupo = new List<UsuarioDomain> { usuarioBase };
 
-                foreach (var outroUsuario in usuarios.Where(u => u.Id != usuarioLogado.Id))
+                foreach (var outroUsuario in usuarios.Where(u => u.Id != usuarioBase.Id))
                 {
-                    if (grupo.Count >= request.NumeroParticipantes - 1) break;
+                    if (grupo.Count >= request.NumeroParticipantes) break;
 
                     var compativelComTodos = true;
-
-                    // Verificar compatibilidade com o usuário logado primeiro
-                    var compatibilidadeComLogado = CalcularPreferenciasCompatíveis(
-                        usuarioLogado.Preferencias,
-                        outroUsuario.Preferencias
-                    );
-
-                    if (compatibilidadeComLogado < request.MinimoPreferenciasIguais)
+                    foreach (var usuarioNoGrupo in grupo)
                     {
-                        compativelComTodos = false;
-                    }
+                        var compatibilidade = CalcularPreferenciasCompatíveis(
+                            usuarioNoGrupo.Preferencias,
+                            outroUsuario.Preferencias
+                        );
 
-                    // Verificar compatibilidade com outros usuários já no grupo
-                    if (compativelComTodos)
-                    {
-                        foreach (var usuarioNoGrupo in grupo)
+                        if (compatibilidade < request.MinimoPreferenciasIguais)
                         {
-                            var compatibilidade = CalcularPreferenciasCompatíveis(
-                                usuarioNoGrupo.Preferencias,
-                                outroUsuario.Preferencias
-                            );
-
-                            if (compatibilidade < request.MinimoPreferenciasIguais)
-                            {
-                                compativelComTodos = false;
-                                break;
-                            }
+                            compativelComTodos = false;
+                            break;
                         }
                     }
 
@@ -146,9 +109,9 @@ namespace WebApi.Services
                     }
                 }
 
-                if (grupo.Count == request.NumeroParticipantes - 1)
+                if (grupo.Count == request.NumeroParticipantes)
                 {
-                    var compatibilidadeMedia = CalcularCompatibilidadeMediaComUsuarioLogado(grupo, usuarioLogado);
+                    var compatibilidadeMedia = CalcularCompatibilidadeMedia(grupo);
                     if (compatibilidadeMedia > melhorCompatibilidade)
                     {
                         melhorCompatibilidade = compatibilidadeMedia;
@@ -156,86 +119,8 @@ namespace WebApi.Services
                     }
                 }
             }
-            else
-            {
-                // Algoritmo original para quando não há usuário logado
-                for (int i = 0; i < Math.Min(usuarios.Count, 10); i++)
-                {
-                    var usuarioBase = usuarios[i];
-                    var grupo = new List<UsuarioDomain> { usuarioBase };
-
-                    foreach (var outroUsuario in usuarios.Where(u => u.Id != usuarioBase.Id))
-                    {
-                        if (grupo.Count >= request.NumeroParticipantes) break;
-
-                        var compativelComTodos = true;
-                        foreach (var usuarioNoGrupo in grupo)
-                        {
-                            var compatibilidade = CalcularPreferenciasCompatíveis(
-                                usuarioNoGrupo.Preferencias,
-                                outroUsuario.Preferencias
-                            );
-
-                            if (compatibilidade < request.MinimoPreferenciasIguais)
-                            {
-                                compativelComTodos = false;
-                                break;
-                            }
-                        }
-
-                        if (compativelComTodos)
-                        {
-                            grupo.Add(outroUsuario);
-                        }
-                    }
-
-                    if (grupo.Count == request.NumeroParticipantes)
-                    {
-                        var compatibilidadeMedia = CalcularCompatibilidadeMedia(grupo);
-                        if (compatibilidadeMedia > melhorCompatibilidade)
-                        {
-                            melhorCompatibilidade = compatibilidadeMedia;
-                            melhorGrupo = grupo;
-                        }
-                    }
-                }
-            }
 
             return melhorGrupo;
-        }
-
-        // Método para calcular compatibilidade média incluindo o usuário logado
-        private int CalcularCompatibilidadeMediaComUsuarioLogado(List<UsuarioDomain> grupo, UsuarioDomain usuarioLogado)
-        {
-            var totalCompatibilidade = 0;
-            var comparacoes = 0;
-
-            // Calcular compatibilidade entre o usuário logado e cada membro do grupo
-            foreach (var usuario in grupo)
-            {
-                var compatibilidade = CalcularPreferenciasCompatíveis(
-                    usuarioLogado.Preferencias,
-                    usuario.Preferencias
-                );
-                totalCompatibilidade += compatibilidade;
-                comparacoes++;
-            }
-
-            // Calcular compatibilidade entre os membros do grupo
-            for (int i = 0; i < grupo.Count; i++)
-            {
-                for (int j = i + 1; j < grupo.Count; j++)
-                {
-                    var compatibilidade = CalcularPreferenciasCompatíveis(
-                        grupo[i].Preferencias,
-                        grupo[j].Preferencias
-                    );
-                    totalCompatibilidade += compatibilidade;
-                    comparacoes++;
-                }
-            }
-
-            return comparacoes > 0 ? totalCompatibilidade / comparacoes : 0;
         }
 
         public int CalcularPreferenciasCompatíveis(PreferenciasUsuarioDomain pref1, PreferenciasUsuarioDomain pref2)
@@ -244,7 +129,7 @@ namespace WebApi.Services
 
             var preferenciasIguais = 0;
 
-            // Comparar preferências básicas
+            // Comparar preferências básicas (11 critérios)
             if (!string.IsNullOrEmpty(pref1.HorarioFavorito) && pref1.HorarioFavorito == pref2.HorarioFavorito) preferenciasIguais++;
             if (!string.IsNullOrEmpty(pref1.TipoComidaFavorito) && pref1.TipoComidaFavorito == pref2.TipoComidaFavorito) preferenciasIguais++;
             if (!string.IsNullOrEmpty(pref1.PreferenciaLocal) && pref1.PreferenciaLocal == pref2.PreferenciaLocal) preferenciasIguais++;
