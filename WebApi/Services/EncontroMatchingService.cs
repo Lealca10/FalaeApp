@@ -161,16 +161,21 @@ namespace WebApi.Services
             {
                 for (int j = i + 1; j < grupo.Count; j++)
                 {
-                    var compatibilidade = CalcularPreferenciasCompatíveis(
+                    var comp = CalcularPreferenciasCompatíveis(
                         grupo[i].Preferencias,
                         grupo[j].Preferencias
                     );
-                    totalCompatibilidade += compatibilidade;
+
+                    totalCompatibilidade += comp;
                     comparacoes++;
                 }
             }
 
-            return comparacoes > 0 ? totalCompatibilidade / comparacoes : 0;
+            if (comparacoes == 0)
+                return 0;
+
+            return totalCompatibilidade / comparacoes;
         }
+
     }
 }
