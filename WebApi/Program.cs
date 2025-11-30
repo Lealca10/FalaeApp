@@ -10,7 +10,6 @@ using Application.UseCases;
 using Domain.Interfaces;
 using Infrastructure.Repositories;
 using Application.UsesCases;
-using WebApi.Services;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);

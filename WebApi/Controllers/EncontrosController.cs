@@ -2,10 +2,14 @@
 using Infrastructure.BaseDados;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Services;
-using WebApi.Models.Request;
+using Application.Interfaces;
+using Application.Request;
+using Application.Request;
 using Application.response;
 using Infrastructure.Data;
+using Application.Interfaces;
+using Application.Request;
+using WebApi.Models.Request;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -156,7 +160,7 @@ public class EncontrosController : ControllerBase
                 LocalId = request.LocalId,
                 DataHora = request.DataHora,
                 MinimoPreferenciasIguais = request.MinimoPreferenciasIguais,
-                NumeroParticipantes = 5
+                NumeroParticipantes = 3
             };
 
             var matchingResult = await _matchingService.EncontrarParticipantesCompatíveis(matchingRequest);

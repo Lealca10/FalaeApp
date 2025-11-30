@@ -1,11 +1,12 @@
-﻿using Application.response;
+﻿using Application.Interfaces;
+using Application.Request;
+using Application.response;
 using Domain.Entities;
 using Infrastructure.BaseDados;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Models.Request;
 
-namespace WebApi.Services
+namespace Infrastructure.Services
 {
     public class EncontroMatchingService : IEncontroMatchingService
     {
