@@ -113,6 +113,51 @@ public class EncontrosController : ControllerBase
         }
     }
 
+    // GET: api/Encontros/usuario/{usuarioId}
+    [HttpGet("usuario/{usuarioId}")]
+    public async Task<ActionResult<IEnumerable<EncontroResponse>>> GetEncontrosPorUsuario(string usuarioId)
+    {
+        try
+        {
+            var encontros = await _context.Encontros
+                .Include(e => e.Local)
+                .Include(e => e.Participantes)
+                .Where(e => e.Participantes.Any(p => p.Id == usuarioId))
+                .Select(e => new EncontroResponse
+                {
+                    Id = e.Id,
+                    LocalId = e.LocalId,
+                    Local = new LocalEncontroInfo
+                    {
+                        Id = e.Local.Id,
+                        Nome = e.Local.Nome,
+                        Endereco = e.Local.Endereco,
+                        Capacidade = e.Local.Capacidade,
+                        ImagemUrl = e.Local.ImagemUrl
+                    },
+                    DataHora = e.DataHora,
+                    Status = e.Status,
+                    DataCriacao = e.DataCriacao,
+                    Participantes = e.Participantes.Select(p => new UsuarioInfo
+                    {
+                        Id = p.Id,
+                        Nome = p.Nome,
+                        Email = p.Email,
+                        Cidade = p.Cidade
+                    }).ToList(),
+                    TotalParticipantes = e.Participantes.Count
+                })
+                .ToListAsync();
+
+            return Ok(encontros);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Erro ao buscar encontros por usuário", details = ex.Message });
+        }
+    }
+
+
     // POST: api/Encontros/matching
     [HttpPost("matching")]
     public async Task<ActionResult<MatchingResult>> ProporEncontro([FromBody] MatchingRequest request)
